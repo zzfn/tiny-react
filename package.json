@@ -1,0 +1,30 @@
+{
+  "name": "tiny-react",
+  "version": "1.0.0",
+  "description": "react简单实现",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cross-env ENV=development rollup -c -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzfn/tiny-react.git"
+  },
+  "keywords": [
+    "react"
+  ],
+  "author": "zzfn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zzfn/tiny-react/issues"
+  },
+  "homepage": "https://github.com/zzfn/tiny-react#readme",
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "cross-env": "^7.0.2",
+    "rollup": "^2.33.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-serve": "^1.1.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
