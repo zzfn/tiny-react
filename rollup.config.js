@@ -6,7 +6,7 @@ export default {
     output:{
         file:'dist/react.js',
         name:"React",
-        format:"umd",
+        format:process.env.ENV==='development'?'iife':"cjs",
         sourcemap:process.env.ENV==='development'
     },
     plugin:[

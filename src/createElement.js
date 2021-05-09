@@ -1,8 +1,9 @@
-function createElement( tag, attrs, ...children ) {
+function createElement(nodeName, props, ...children) {
     return {
-        tag,
-        attrs,
+        nodeName,
+        props: props || {},
         children
     }
 }
+
 export {createElement}

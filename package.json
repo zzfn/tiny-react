@@ -1,10 +1,14 @@
 {
-  "name": "tiny-react",
+  "name": "@zzf/tiny-react",
   "version": "1.0.0",
   "description": "react简单实现",
-  "main": "index.js",
+  "main": "dist/react.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "dev": "cross-env ENV=development rollup -c -w"
+    "dev": "cross-env ENV=development rollup -c -w",
+    "build": "cross-env ENV=production rollup -c"
   },
   "repository": {
     "type": "git",
