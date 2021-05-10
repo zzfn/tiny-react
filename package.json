@@ -2,7 +2,8 @@
   "name": "@zzf/tiny-react",
   "version": "1.0.0",
   "description": "react简单实现",
-  "main": "dist/react.js",
+  "main": "dist/react.cjs.js",
+  "module": "dist.react.esm.js",
   "files": [
     "dist"
   ],

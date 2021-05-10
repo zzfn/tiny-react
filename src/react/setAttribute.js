@@ -1,5 +1,4 @@
 function setAttribute(dom,name,value) {
-    console.log(dom,name,value)
     // 如果属性名是className，则改回class
     if (name === 'className') name = 'class';
 

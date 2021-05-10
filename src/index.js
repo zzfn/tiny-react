@@ -12,6 +12,5 @@
 // export {createElement} from './createElement'
 // export {Component} from './Component'
 import {React} from "./react/index";
-export {ReactDom} from './react-dom/index'
-
+// export {ReactDom} from './react-dom/index'
 export default React
