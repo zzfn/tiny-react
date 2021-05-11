@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel'
+import babel from '@rollup/plugin-babel'
 import serve from "rollup-plugin-serve";
 import { terser } from "rollup-plugin-terser";
 export default {
@@ -25,10 +25,9 @@ export default {
         }
     ],
     plugin:[
-        terser({
-            module:true
-        }),
+        terser({}),
         babel({
+            babelHelpers:'bundled',
             exclude:"node_modules/**"
         }),
         process.env.ENV==='development'?serve({
