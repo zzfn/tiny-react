@@ -5,52 +5,11 @@
     <title>Title</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 </head>
-<style>
-    #root{
-        height: 5px;
-        width: 0;
-        background: #000;
-    }
-</style>
+
 <body>
 <div id="root"></div>
 <script src="react.js"></script>
 <script src="index.js"></script>
-<script>
-    let root={
-        key:'A1',
-        children:[
-            {
-                key:'B1',
-                children:[
-                    {key:'C1',children:[]},
-                    {key:'C2',children:[]},
-                ]
-            },
-            {
-                key:'B2',
-                children:[]
-            }
-        ]
-    }
-    function walk(vdom) {
-        doWork(vdom)
-        vdom.children.forEach(child=>{
-            walk(child)
-        })
-    }
-    function doWork(vdom) {
-        console.log(vdom.key)
-    }
-    walk(root)
-    // test()
-    // React.render(React.createElement( 'h1', null, 'Hello, world!' ),document.getElementById('root'));
-    // function tick() {
-    //     React.render(
-    //         React.createElement( 'h6', null, 'Hello, w22orld!' ),
-    //         document.getElementById( 'root' )
-    //     );
-    // }
 </script>
 </body>
 </html>

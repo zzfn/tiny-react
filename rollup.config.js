@@ -24,7 +24,7 @@ export default {
             sourcemap:process.env.ENV==='development'
         }
     ],
-    plugin:[
+    plugins:[
         terser({}),
         babel({
             babelHelpers:'bundled',
