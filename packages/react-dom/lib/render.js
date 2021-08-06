@@ -14,10 +14,19 @@ function render(element, container) {
  */
 function createDom(element) {
     if([null,undefined].includes(element)){
-        return document.createTextNode('11')
+        return
     }
     if (['number', 'string'].includes(typeof element)) {
         return document.createTextNode(element)
+    }
+    if(element.type===undefined){
+        const fragment = document.createDocumentFragment();
+        if(!Array.isArray(element)){
+            element.props.children.forEach(i=>{
+                fragment.appendChild(createDom(i))
+            })
+            return fragment
+        }
     }
     if (typeof element.type === 'function') {
         if (element.type.isReactComponent) {
@@ -37,10 +46,16 @@ function createDom(element) {
             }
         })
         element.props.children.forEach(child => {
-            console.log(child)
             dom.appendChild(createDom(child))
         })
         return dom
+    }
+    if(Array.isArray(element)){
+        const fragment = document.createDocumentFragment();
+        element.forEach(i=>{
+           fragment.appendChild(createDom(i))
+        })
+        return fragment
     }
 }
 
