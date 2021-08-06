@@ -41,6 +41,7 @@ function createDom(element) {
         Object.entries(element.props).forEach(([k, v]) => {
             if (k !== 'children') {
                 if (typeof v === 'function') {
+                    //todo setAttribute
                     dom[k.toLowerCase()] = v
                 }
             }

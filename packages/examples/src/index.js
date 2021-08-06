@@ -23,7 +23,11 @@ class Test extends React.Component {
             {Array.from({length:1000},(_,index)=>index).map(i=><span>{i}</span>)}
             <App s={this.state.counter}/>
             <button onClick={() => {
-                this.setState({counter: this.state.counter + 1})
+                for ( let i = 0; i < 100; i++ ) {
+                    this.setState({counter: this.state.counter + 1})
+                    console.log(this.state.counter)
+                    // this.setState(state => ({counter: state.counter + 1}))
+                }
             }
             }>+1</button>
             <div>{this.state.counter}</div>

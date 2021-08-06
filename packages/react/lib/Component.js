@@ -1,4 +1,5 @@
 import {render} from "../../react-dom/lib/render";
+import {enqueueSetState} from "./enqueueSetState";
 
 class Component {
     static isReactComponent=true
@@ -8,8 +9,9 @@ class Component {
     }
 
     setState(newState) {
-        this.state = {...this.state, ...newState}
-        render.renderComponent(this)
+        // this.state = {...this.state, ...newState}
+        // Object.assign(this.state,newState)
+        enqueueSetState(newState,this)
     }
 }
 
