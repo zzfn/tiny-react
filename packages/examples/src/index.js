@@ -1,11 +1,16 @@
 import React from "@zzf/react"
 import ReactDOM from "@zzf/react-dom"
 
-function App({s='33'}) {
-    return <>
-        <h2>Hello{s}</h2>
-        <hr/>
-    </>
+function App() {
+    return <div id={'A1'}>
+        A1
+        <div id={'B1'}>
+            B1
+        <div id={'C1'}>C1</div>
+        <div id={'C2'}>C2</div>
+        </div>
+        <div id={'B2'}>B2</div>
+    </div>
 }
 
 class Test extends React.Component {
@@ -38,4 +43,4 @@ class Test extends React.Component {
     }
 }
 
-ReactDOM.render(<Test/>, document.querySelector('#root'))
+ReactDOM.render(App(), document.querySelector('#root'))

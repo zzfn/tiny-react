@@ -3,9 +3,18 @@
  * @param element
  * @param container
  */
+import {TAG_ROOT} from "../../react-reconciler/lib/constants";
+import {scheduleRoot} from "../../scheduler/lib/scheduleRoot";
+
 function render(element, container) {
-    container.innerHTML = ''
-    container.appendChild(createDom(element))
+    let rootFiber = {
+        tag: TAG_ROOT,
+        stateNode: container,
+        props:{children:[element]}
+    }
+    scheduleRoot(rootFiber)
+    // container.innerHTML = ''
+    // container.appendChild(createDom(element))
 }
 
 /**
@@ -13,16 +22,16 @@ function render(element, container) {
  * @param element
  */
 function createDom(element) {
-    if([null,undefined].includes(element)){
+    if ([null, undefined].includes(element)) {
         return
     }
     if (['number', 'string'].includes(typeof element)) {
         return document.createTextNode(element)
     }
-    if(element.type===undefined){
+    if (element.type === undefined) {
         const fragment = document.createDocumentFragment();
-        if(!Array.isArray(element)){
-            element.props.children.forEach(i=>{
+        if (!Array.isArray(element)) {
+            element.props.children.forEach(i => {
                 fragment.appendChild(createDom(i))
             })
             return fragment
@@ -32,7 +41,7 @@ function createDom(element) {
         if (element.type.isReactComponent) {
             const base = new element.type(element.props)
             return renderComponent(base)
-        }else {
+        } else {
             return createDom(element.type(element.props))
         }
     }
@@ -52,10 +61,10 @@ function createDom(element) {
         })
         return dom
     }
-    if(Array.isArray(element)){
+    if (Array.isArray(element)) {
         const fragment = document.createDocumentFragment();
-        element.forEach(i=>{
-           fragment.appendChild(createDom(i))
+        element.forEach(i => {
+            fragment.appendChild(createDom(i))
         })
         return fragment
     }
