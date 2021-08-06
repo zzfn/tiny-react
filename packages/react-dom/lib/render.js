@@ -44,6 +44,7 @@ function createDom(element) {
                     //todo setAttribute
                     dom[k.toLowerCase()] = v
                 }
+                dom[k.toLowerCase()] = v
             }
         })
         element.props.children.forEach(child => {
