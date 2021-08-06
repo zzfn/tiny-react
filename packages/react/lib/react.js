@@ -1,7 +1,7 @@
-import {render} from './render.ts'
-import {createElement} from "./createElement.ts";
+import {createElement} from "./createElement";
+import {Component} from "./Component"
 
 export default {
-    render,
-    createElement
+    createElement,
+    Component
 }

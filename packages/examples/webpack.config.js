@@ -19,6 +19,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({template:'index.html'})
     ],
+    devtool:'source-map',
     devServer: {
         inline: true,
         // hot:false

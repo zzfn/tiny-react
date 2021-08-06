@@ -1,17 +1,33 @@
 import React from "@zzf/react"
+import ReactDOM from "@zzf/react-dom"
 
-function App() {
+function App({s='33'}) {
     return <div>
-        <input onChange={event => console.log(event)} value={value}/>
-        <h2>Hello {value}</h2>
+        <h2>Hello{s}</h2>
         <hr/>
     </div>
 }
 
-function Children() {
-    return <div>2222</div>
+class Test extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            counter: 10
+        }
+    }
+    componentDidMount() {
+        console.log('componentDidMount')
+    }
+    render() {
+        return <div>
+            <App s={this.state.counter}/>
+            <button onClick={() => {
+                this.setState({counter: this.state.counter + 1})
+            }
+            }>+1</button>
+            <div>{this.state.counter}</div>
+        </div>
+    }
 }
 
-React.render(<App source={1}><Children/>
-    <div>1</div>
-</App>, document.querySelector('#root'))
+ReactDOM.render(<Test/>, document.querySelector('#root'))
