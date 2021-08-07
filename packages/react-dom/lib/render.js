@@ -7,7 +7,6 @@ import {TAG_ROOT} from "../../react-reconciler/lib/constants";
 import {scheduleRoot} from "../../scheduler/lib/scheduleRoot";
 
 function render(element, container) {
-    console.log(element)
     let rootFiber = {
         tag: TAG_ROOT,
         stateNode: container,

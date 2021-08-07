@@ -9,6 +9,8 @@ var __publicField = (obj, key, value) => {
 var ELEMENT_TEXT = Symbol.for("ELEMENT_TEXT");
 var TAG_ROOT = Symbol.for("TAG_ROOT");
 var TAG_HOST = Symbol.for("TAG_HOST");
+var TAG_CLASS = Symbol.for("TAG_CLASS");
+var TAG_FUNCTION = Symbol.for("TAG_FUNCTION");
 var TAG_TEXT = Symbol.for("TAG_TEXT");
 var PLACEMENT = Symbol.for("PLACEMENT");
 var UPDATE = Symbol.for("UPDATE");
@@ -16,7 +18,6 @@ var DELETION = Symbol.for("DELETION");
 
 // lib/createElement.js
 function createElement(type, config, ...children) {
-  console.log(2);
   return {
     type,
     props: {
@@ -31,9 +32,20 @@ function createElement(type, config, ...children) {
 // ../scheduler/lib/setProps.js
 function setProps(dom, oldProps, newProps) {
   for (const key in oldProps) {
+    if (key !== "children") {
+      if (newProps.hasOwnProperty(key)) {
+        setProp(dom, key, newProps[key]);
+      } else {
+        dom.removeAttribute(key);
+      }
+    }
   }
   for (const key in newProps) {
     if (key !== "children") {
+      if (oldProps.hasOwnProperty(key)) {
+      } else {
+        setProp(dom, key, newProps[key]);
+      }
       setProp(dom, key, newProps[key]);
     }
   }
@@ -53,17 +65,66 @@ function setProp(dom, key, value) {
   }
 }
 
+// lib/enqueueSetState.js
+var Update = class {
+  constructor(payload) {
+    this.payload = payload;
+  }
+};
+var UpdateQueue = class {
+  constructor() {
+    this.firstUpdate = null;
+    this.lastUpdate = null;
+  }
+  enqueueUpdate(update) {
+    if (this.lastUpdate === null) {
+      this.firstUpdate = this.lastUpdate = update;
+    } else {
+      this.lastUpdate.nextUpdate = update;
+      this.lastUpdate = update;
+    }
+  }
+  forceUpdate(update) {
+    let currentUpdate = this.firstUpdate;
+    while (currentUpdate) {
+      let nextState = typeof currentUpdate.payload === "function" ? currentUpdate.payload(update) : currentUpdate.payload;
+      update = { ...update, ...nextState };
+      currentUpdate = currentUpdate.nextUpdate;
+    }
+    this.firstUpdate = this.lastUpdate = null;
+    return update;
+  }
+};
+
 // ../scheduler/lib/scheduleRoot.js
 var nextUnitOfWork = null;
 var workInProgressRoot = null;
 var currentRoot = null;
 var deletions = [];
+var workInProgressFiber = null;
+var homeIndex = 0;
 function scheduleRoot(rootFiber) {
-  if (currentRoot) {
-    rootFiber.alternate = currentRoot;
+  if (currentRoot && currentRoot.alternate) {
+    workInProgressRoot = currentRoot.alternate;
+    workInProgressRoot.alternate = currentRoot;
+    if (rootFiber) {
+      workInProgressRoot.props = rootFiber.props;
+    }
+  } else if (currentRoot) {
+    if (rootFiber) {
+      rootFiber.alternate = currentRoot;
+      workInProgressRoot = rootFiber;
+    } else {
+      workInProgressRoot = {
+        ...currentRoot,
+        alternate: currentRoot
+      };
+    }
+  } else {
+    workInProgressRoot = rootFiber;
   }
-  nextUnitOfWork = rootFiber;
-  workInProgressRoot = rootFiber;
+  workInProgressRoot.firstEffect = workInProgressRoot.lastEffect = workInProgressRoot.nextEffect = null;
+  nextUnitOfWork = workInProgressRoot;
 }
 function workLoop(deadline) {
   let shouldYield = false;
@@ -99,7 +160,29 @@ function beginWork(currentFiber) {
     updateHostText(currentFiber);
   } else if (currentFiber.tag === TAG_HOST) {
     updateHost(currentFiber);
+  } else if (currentFiber.tag === TAG_CLASS) {
+    updateClassComponent(currentFiber);
+  } else if (currentFiber.tag === TAG_FUNCTION) {
+    updateFunction(currentFiber);
   }
+}
+function updateFunction(currentFiber) {
+  workInProgressFiber = currentFiber;
+  homeIndex = 0;
+  workInProgressFiber.hooks = [];
+  const newChildren = [currentFiber.type(currentFiber.props)];
+  reconcileChildren(currentFiber, newChildren);
+}
+function updateClassComponent(currentFiber) {
+  if (!currentFiber.stateNode) {
+    currentFiber.stateNode = new currentFiber.type(currentFiber.props);
+    currentFiber.stateNode.internalFiber = currentFiber;
+    currentFiber.updateQueue = new UpdateQueue();
+  }
+  currentFiber.stateNode.state = currentFiber.updateQueue.forceUpdate(currentFiber.stateNode.state);
+  let newElement = currentFiber.stateNode.render();
+  const newChildren = [newElement];
+  reconcileChildren(currentFiber, newChildren);
 }
 function updateHostRoot(currentFiber) {
   const newChildren = currentFiber.props.children;
@@ -127,29 +210,73 @@ function createDom(currentFiber) {
   }
 }
 function updateDom(stateNode, oldProps, newProps) {
-  setProps(stateNode, oldProps, newProps);
+  if (stateNode instanceof HTMLElement) {
+    setProps(stateNode, oldProps, newProps);
+  }
 }
 function reconcileChildren(currentFiber, newChildren) {
   let newChildIndex = 0;
   let oldFiber = currentFiber.alternate && currentFiber.alternate.child;
+  if (oldFiber) {
+    oldFiber.firstEffect = oldFiber.lastEffect = oldFiber.nextEffect = null;
+  }
   let prevSibling;
-  while (newChildIndex < newChildren.length) {
+  while (newChildIndex < newChildren.length || oldFiber) {
     let tag;
     let newChild = newChildren[newChildIndex];
-    if (newChild.type === ELEMENT_TEXT) {
+    let newFiber;
+    const sameFiber = oldFiber && newChild && oldFiber.type === newChild.type;
+    if (newChild && typeof newChild.type === "function" && newChild.type.isReactComponent) {
+      tag = TAG_CLASS;
+    } else if (newChild && typeof newChild.type === "function") {
+      tag = TAG_FUNCTION;
+    } else if (newChild && newChild.type === ELEMENT_TEXT) {
       tag = TAG_TEXT;
     } else if (typeof newChild.type === "string") {
       tag = TAG_HOST;
     }
-    let newFiber = {
-      tag,
-      type: newChild.type,
-      props: newChild.props,
-      stateNode: null,
-      return: currentFiber,
-      effectTag: PLACEMENT,
-      nextEffect: null
-    };
+    if (sameFiber) {
+      if (oldFiber.alternate) {
+        newFiber = oldFiber.alternate;
+        newFiber.props = newChild.props;
+        newFiber.alternate = oldFiber;
+        newFiber.effectTag = UPDATE;
+        newFiber.updateQueue = oldFiber.updateQueue || new UpdateQueue();
+        newFiber.nextEffect = null;
+      } else {
+        newFiber = {
+          tag: oldFiber.tag,
+          type: oldFiber.type,
+          props: newChild.props,
+          stateNode: oldFiber.stateNode,
+          return: currentFiber,
+          updateQueue: oldFiber.updateQueue || new UpdateQueue(),
+          alternate: oldFiber,
+          effectTag: UPDATE,
+          nextEffect: null
+        };
+      }
+    } else {
+      if (newChild) {
+        newFiber = {
+          tag,
+          type: newChild.type,
+          props: newChild.props,
+          stateNode: null,
+          return: currentFiber,
+          updateQueue: new UpdateQueue(),
+          effectTag: PLACEMENT,
+          nextEffect: null
+        };
+      }
+      if (oldFiber) {
+        oldFiber.effectTag = DELETION;
+        deletions.push(oldFiber);
+      }
+    }
+    if (oldFiber) {
+      oldFiber = oldFiber.sibling;
+    }
     if (newFiber) {
       if (newChildIndex === 0) {
         currentFiber.child = newFiber;
@@ -199,14 +326,22 @@ function commitRoot() {
 function commitWork(currentFiber) {
   if (currentFiber) {
     let returnFiber = currentFiber.return;
+    while (returnFiber.tag !== TAG_HOST && returnFiber.tag !== TAG_ROOT && returnFiber.tag !== TAG_TEXT) {
+      returnFiber = returnFiber.return;
+    }
     let domReturn = returnFiber.stateNode;
     if (currentFiber.effectTag === PLACEMENT) {
-      console.log(currentFiber.stateNode);
-      domReturn.appendChild(currentFiber.stateNode);
+      let nextFiber = currentFiber;
+      if (nextFiber.tag === TAG_CLASS) {
+        return;
+      }
+      while (nextFiber.tag !== TAG_HOST && nextFiber.tag !== TAG_TEXT) {
+        nextFiber = currentFiber.child;
+      }
+      domReturn.appendChild(nextFiber.stateNode);
     } else if (currentFiber.effectTag === DELETION) {
-      domReturn.removeChild(currentFiber.stateNode);
+      return commitDeletion(currentFiber, domReturn);
     } else if (currentFiber.effectTag === UPDATE) {
-      domReturn.replaceChild(currentFiber.stateNode);
       if (currentFiber.type === ELEMENT_TEXT) {
         currentFiber.stateNode.textContent = currentFiber.props.text;
       } else {
@@ -216,10 +351,16 @@ function commitWork(currentFiber) {
     currentFiber.effectTag = null;
   }
 }
+function commitDeletion(currentFiber, domReturn) {
+  if (currentFiber.tag === TAG_HOST || currentFiber.tag === TAG_TEXT) {
+    domReturn.removeChild(currentFiber.stateNode);
+  } else {
+    commitDeletion(currentFiber, domReturn);
+  }
+}
 
 // ../react-dom/lib/render.js
 function render(element, container) {
-  console.log(element);
   let rootFiber = {
     tag: TAG_ROOT,
     stateNode: container,
@@ -286,40 +427,6 @@ function renderComponent(component) {
 }
 render.renderComponent = renderComponent;
 
-// lib/enqueueSetState.js
-var queue = [];
-var renderQueue = [];
-function defer(fn) {
-  return Promise.resolve().then(fn);
-}
-function enqueueSetState(newState, component) {
-  if (queue.length === 0) {
-    defer(flush).then();
-  }
-  queue.push({ newState, component });
-  if (!renderQueue.some((item) => item === component)) {
-    renderQueue.push(component);
-  }
-}
-function flush() {
-  let item, component;
-  while (item = queue.shift()) {
-    const { newState: stateChange, component: component2 } = item;
-    if (!component2.prevState) {
-      component2.prevState = Object.assign({}, component2.state);
-    }
-    if (typeof stateChange === "function") {
-      Object.assign(component2.state, stateChange(component2.prevState, component2.props));
-    } else {
-      Object.assign(component2.state, stateChange);
-    }
-    component2.prevState = component2.state;
-  }
-  while (component = renderQueue.shift()) {
-    render.renderComponent(component);
-  }
-}
-
 // lib/Component.js
 var Component = class {
   constructor(props) {
@@ -327,7 +434,9 @@ var Component = class {
     this.props = props;
   }
   setState(newState) {
-    enqueueSetState(newState, this);
+    let update = new Update(newState);
+    this.internalFiber.updateQueue.enqueueUpdate(update);
+    scheduleRoot();
   }
 };
 __publicField(Component, "isReactComponent", true);
@@ -335,7 +444,8 @@ __publicField(Component, "isReactComponent", true);
 // lib/react.js
 var react_default = {
   createElement,
-  Component
+  Component,
+  reducer: void 0
 };
 export {
   react_default as default

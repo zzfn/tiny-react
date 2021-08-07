@@ -1,7 +1,6 @@
 import {ELEMENT_TEXT} from "../../react-reconciler/lib/constants";
 
 function createElement(type, config, ...children) {
-    console.log(2)
     return {
         type,
         props: {
